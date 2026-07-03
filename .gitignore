@@ -1,0 +1,57 @@
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Vercel
+.vercel/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Chaves/segredos
+keys*.txt
+supabase_keys.txt
+*.pem
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# App mobile (repo separado)
+feedback-app/
+
+# IA / agentes
+.claude/
+.agent/
+.superpowers/
+superpowers-main/
+
+# Cache
+*.log
+.cache/
+
+# Uploads / dados de pacientes (DOCX com dados reais)
+exemplos de feeback antigos/
+especificacao_feedback_hospitalar.docx
+especificacao_completa_feedback_hospitalar_v2.docx
+
+# Planos efêmeros
+docs/superpowers/
+
+# Supabase temp
+supabase/.temp/

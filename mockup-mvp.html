@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback App – Protótipo Completo</title>
+  <style>
+    :root {
+      --primary: #007AFF;
+      --danger: #FF3B30;
+      --success: #34C759;
+      --warning: #FF9500;
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --text: #1c1c1e;
+      --subtle: #8e8e93;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* SHELL */
+    .shell {
+      max-width: 420px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      background: white;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 1px 0 #e0e0e5;
+      position: sticky; top:0; z-index: 10;
+    }
+    .topbar h1 { font-size: 1.1rem; font-weight: 600; flex: 1; }
+    .topbar .badge {
+      background: var(--primary);
+      color: white;
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .topbar .badge.resident { background: var(--success); }
+
+    /* NAV TABS */
+    .nav {
+      display: flex;
+      background: white;
+      border-top: 1px solid #e0e0e5;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 420px;
+      z-index: 10;
+    }
+    .nav button {
+      flex: 1;
+      padding: 12px 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--subtle);
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      transition: color 0.2s;
+    }
+    .nav button.active { color: var(--primary); }
+    .nav button .icon { font-size: 1.4rem; }
+
+    /* SCREENS */
+    .screen { display: none; padding: 20px 16px 100px; }
+    .screen.active { display: block; }
+
+    /* CARDS */
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .card h3 { font-size: 1rem; margin-bottom: 6px; }
+    .card .meta { font-size: 0.82rem; color: var(--subtle); margin-bottom: 8px; }
+
+    /* STATUS BADGES */
+    .badge-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+    .s-gravando   { background:#FFE5E5; color: var(--danger); }
+    .s-salvo      { background:#FFF4E0; color: var(--warning); }
+    .s-ia         { background:#E8F4FF; color: var(--primary); }
+    .s-revisao    { background:#E8F4FF; color: var(--primary); }
+    .s-liberado   { background:#E8F8EE; color: var(--success); }
+
+    /* BIG RECORD BUTTON */
+    .record-wrap { text-align: center; margin: 30px 0 20px; }
+    .btn-record {
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary);
+      color: white;
+      font-size: 1.4rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 12px 30px rgba(0,122,255,0.3);
+      display: inline-flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-record .icon { font-size: 2.4rem; }
+    .btn-record.recording { background: var(--danger); box-shadow: 0 0 0 0 rgba(255,59,48,.7); animation: pulse 1.6s infinite; }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(255,59,48,.5); }
+      70%  { box-shadow: 0 0 0 24px rgba(255,59,48,0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); }
+    }
+    #timer { font-size: 1.1rem; }
+    .hint { text-align:center; color:var(--subtle); font-size:0.88rem; margin-top:-10px; margin-bottom:20px; }
+
+    /* REVIEW FORM */
+    .field-group { margin-bottom: 14px; }
+    .field-group label { font-size:0.8rem; color:var(--subtle); font-weight:600; display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+    .field-group .value-box {
+      background: #f2f2f7;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      border: 1.5px solid transparent;
+      transition: border 0.2s;
+    }
+    .field-group .value-box[contenteditable="true"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+    }
+    .uncertain { color: var(--warning); font-style: italic; }
+    .audio-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: #f2f2f7; border-radius: 10px; padding: 10px 14px;
+      margin-bottom: 14px;
+    }
+    .audio-bar .play { font-size: 1.4rem; cursor:pointer; }
+    .audio-bar .track { flex:1; height:4px; background:#ddd; border-radius:2px; position:relative; }
+    .audio-bar .track::after { content:''; display:block; width:35%; height:100%; background:var(--primary); border-radius:2px; }
+    .audio-bar .dur { font-size:0.82rem; color:var(--subtle); }
+
+    .section-title { font-size: 1rem; font-weight:700; margin: 20px 0 10px; }
+
+    /* BUTTONS */
+    .btn { border:none; border-radius:12px; padding:14px; font-size:1rem; font-weight:700; cursor:pointer; width:100%; margin-top:6px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); }
+
+    /* PROFILE */
+    .profile-header {
+      text-align: center; padding: 20px 0 10px;
+    }
+    .avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700; margin-bottom: 12px; }
+    .profile-header h2 { font-size: 1.3rem; }
+    .profile-header .role-tag { display: inline-block; background: #E8F4FF; color: var(--primary); border-radius: 20px; padding: 4px 12px; font-size: 0.82rem; font-weight: 600; margin-top: 6px; }
+
+    .timeline-item { display: flex; gap: 12px; margin-bottom: 16px; }
+    .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); margin-top: 4px; flex-shrink: 0; }
+    .timeline-line { width: 2px; background: #ddd; margin: 4px auto; }
+    .timeline-left { display: flex; flex-direction: column; align-items: center; }
+
+    /* CHIPS */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip { padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; }
+    .chip-green { background: #E8F8EE; color: var(--success); }
+    .chip-red { background: #FFE5E5; color: var(--danger); }
+
+    /* RESIDENT VIEW */
+    .fb-card { background:white; border-radius:14px; overflow:hidden; margin-bottom:14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .fb-card-header { background: linear-gradient(135deg, var(--success), #1fa84c); color:white; padding: 14px 16px; }
+    .fb-card-header h3 { font-size:1rem; }
+    .fb-card-header small { opacity:0.8; font-size:0.82rem; }
+    .fb-card-body { padding: 14px 16px; }
+    .fb-section { margin-bottom: 12px; }
+    .fb-section h4 { font-size:0.8rem; color:var(--subtle); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+    .fb-section p { font-size:0.92rem; line-height:1.6; }
+
+    /* SEARCH & LIST */
+    .search-bar { background:white; border-radius:12px; padding:10px 14px; display:flex; align-items:center; gap:8px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+    .search-bar input { border:none; outline:none; flex:1; font-size:0.95rem; background:transparent; }
+    .filters { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none; }
+    .filters::-webkit-scrollbar { display:none; }
+    .filter-chip { flex-shrink:0; padding:6px 14px; border-radius:20px; border:1.5px solid #ddd; background:white; font-size:0.82rem; cursor:pointer; transition:all 0.15s; color:var(--subtle); }
+    .filter-chip.on { background:var(--primary); border-color:var(--primary); color:white; }
+    .resident-row { background:white; border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:14px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.06); transition:transform 0.1s; }
+    .resident-row:active { transform:scale(0.98); }
+    .res-avatar { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; color:white; flex-shrink:0; }
+    .res-info { flex:1; }
+    .res-info h3 { font-size:0.95rem; margin-bottom:2px; }
+    .res-info .res-meta { font-size:0.8rem; color:var(--subtle); }
+    .res-count { font-size:0.8rem; color:var(--subtle); text-align:right; }
+
+    /* ACERVO REDESIGN */
+    .acervo-header { margin-bottom:16px; }
+    .acervo-header h2 { font-size:1.15rem; font-weight:700; margin-bottom:2px; }
+    .acervo-header p { font-size:0.82rem; color:var(--subtle); }
+    .acervo-search-bar { background:white; border-radius:14px; padding:12px 16px; display:flex; align-items:center; gap:10px; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); border:1.5px solid transparent; transition:border 0.2s; }
+    .acervo-search-bar:focus-within { border-color:var(--primary); }
+    .acervo-search-bar input { border:none; outline:none; flex:1; font-size:0.95rem; }
+    .mode-switch { display:flex; background:white; border-radius:12px; padding:4px; gap:2px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+    .mode-btn { flex:1; padding:9px 4px; border:none; background:none; font-size:0.78rem; font-weight:600; color:var(--subtle); cursor:pointer; border-radius:9px; transition:all 0.2s; }
+    .mode-btn.on { background:var(--primary); color:white; }
+    .filter-row { display:flex; gap:8px; margin-bottom:10px; }
+    .filter-pill { flex:1; background:white; border:1.5px solid #e5e5ea; border-radius:10px; padding:9px 12px; font-size:0.82rem; color:var(--text); cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:border 0.2s; }
+    .filter-pill .label { color:var(--subtle); font-size:0.72rem; display:block; margin-bottom:1px; }
+    .filter-pill.active { border-color:var(--primary); color:var(--primary); }
+    .filter-pill .arrow { color:#ccc; font-size:0.9rem; }
+    .refine-btn { width:100%; background:white; border:1.5px solid #e5e5ea; border-radius:10px; padding:11px; font-size:0.88rem; color:var(--primary); font-weight:600; cursor:pointer; margin-bottom:16px; display:flex; align-items:center; justify-content:center; gap:6px; }
+    .acervo-count { font-size:0.82rem; color:var(--subtle); margin-bottom:10px; }
+    .ac-card { background:white; border-radius:14px; padding:14px 16px; margin-bottom:10px; box-shadow:0 2px 6px rgba(0,0,0,0.05); cursor:pointer; border-left:4px solid #e5e5ea; transition:border-color 0.2s; }
+    .ac-card:hover { border-left-color:var(--primary); }
+    .ac-card .ac-name { font-weight:700; font-size:0.95rem; margin-bottom:4px; }
+    .ac-card .ac-line1 { font-size:0.82rem; color:var(--subtle); margin-bottom:3px; }
+    .ac-card .ac-line2 { font-size:0.8rem; color:var(--subtle); }
+    .ac-card .ac-badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:0.72rem; font-weight:700; margin-top:6px; }
+    .ac-badge.pendente { background:#FFF4E0; color:var(--warning); }
+    .ac-badge.revisado { background:#E8F4FF; color:var(--primary); }
+    .ac-badge.liberado { background:#E8F8EE; color:var(--success); }
+    /* BOTTOM SHEET */
+    .sheet-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; display:none; }
+    .sheet-overlay.visible { display:block; }
+    .sheet { position:fixed; bottom:-100%; left:50%; transform:translateX(-50%); width:100%; max-width:420px; background:white; border-radius:20px 20px 0 0; padding:20px 20px 40px; z-index:101; max-height:75vh; overflow-y:auto; transition: bottom 0.3s ease-out; }
+    .sheet.visible { bottom: 0; }
+    .sheet h3 { font-size:1rem; font-weight:700; margin-bottom:16px; }
+    .sheet-field { margin-bottom:16px; }
+    .sheet-field label { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.5px; color:var(--subtle); font-weight:700; display:block; margin-bottom:8px; }
+    .sheet-options { display:flex; flex-wrap:wrap; gap:8px; }
+    .sheet-opt { padding:7px 14px; border-radius:20px; border:1.5px solid #e5e5ea; font-size:0.82rem; cursor:pointer; transition:all 0.15s; color:var(--text); }
+    .sheet-opt.on { background:var(--primary); border-color:var(--primary); color:white; }
+    .sheet-apply { width:100%; background:var(--primary); color:white; border:none; border-radius:12px; padding:14px; font-weight:700; font-size:1rem; cursor:pointer; margin-top:8px; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <h1 id="topbar-title">🎙️ Feedback App</h1>
+    <span class="badge" id="topbar-badge">Avaliador</span>
+  </div>
+
+  <!-- ========== TELA 1: AVALIADOR HOME ========== -->
+  <div class="screen active" id="screen-home">
+    <div class="record-wrap">
+      <button class="btn-record" id="record-btn" onclick="toggleRecording()">
+        <span class="icon" id="btn-icon">🎙️</span>
+        <span id="btn-text">GRAVAR NOVO</span>
+        <span id="timer" style="display:none">00:00</span>
+      </button>
+    </div>
+    <p class="hint" id="hint-text">Zero preenchimento • Apenas grave e pare</p>
+
+    <div class="section-title">Feedbacks Recentes</div>
+
+    <div id="recorded-feedbacks"></div>
+
+    <div class="card">
+      <div class="meta">Hoje, 14:32 · 4m22s</div>
+      <h3>Feedback · Ana Carolina D. (Autonomia L2)</h3>
+      <p style="margin-top:6px;"><span class="badge-status s-revisao">Pronto para revisão</span></p>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="goToReview()">Revisar Feedback da IA →</button>
+    </div>
+
+    <div class="card">
+      <div class="meta">Ontem, 17:10 · 6m05s</div>
+      <h3>Feedback · Fernanda M. (Autonomia L1)</h3>
+      <span class="badge-status s-liberado">Liberado ao residente</span>
+    </div>
+  </div>
+
+  <!-- ========== TELA 2: REVISÃO PÓS-IA ========== -->
+  <div class="screen" id="screen-review">
+    <div class="section-title" style="margin-top:0">Feedback · Revisão da IA</div>
+    <p style="color:var(--subtle);font-size:0.85rem;margin-bottom:16px;">Edite o que a IA errou. Campos marcados com ⚠️ precisam de atenção.</p>
+
+    <div class="audio-bar">
+      <span class="play">▶️</span>
+      <div class="track"></div>
+      <span class="dur">4:22</span>
+    </div>
+
+    <div class="field-group">
+      <label>Residente / Avaliado</label>
+      <div class="value-box" contenteditable="true">Ana Carolina Domingues</div>
+    </div>
+    <div class="field-group">
+      <label>Papel no Momento</label>
+      <div class="value-box" contenteditable="true">R2 / L2 – Residência Pediatria Emergência</div>
+    </div>
+    <div class="field-group">
+      <label>Passagem</label>
+      <div class="value-box" contenteditable="true">Primeira passagem – 7º dia</div>
+    </div>
+    <div class="field-group">
+      <label>Cenário Assistencial</label>
+      <div class="value-box" contenteditable="true">Retaguarda (reta)</div>
+    </div>
+    <div class="field-group">
+      <label>Grau de Autonomia ⚠️</label>
+      <div class="value-box uncertain" contenteditable="true">⚠️ Não identificado claramente no áudio</div>
+    </div>
+
+    <div class="section-title">Pontos Fortes (inferidos pela IA)</div>
+    <div class="field-group">
+      <div class="value-box" contenteditable="true">• Boa capacidade de identificar prioridades na retaguarda
+• Atuação colaborativa na definição de altas
+• Percebeu alterações em pacientes e promoveu reavaliações</div>
+    </div>
+
+    <div class="section-title">Dificuldades (inferidas pela IA)</div>
+    <div class="field-group">
+      <div class="value-box" contenteditable="true">• Gestão do fluxo e pendências da manhã
+• Registros finalizados tardiamente após troca de turno
+• Integração tardia de pacientes da porta (caso "Samuel")</div>
+    </div>
+
+    <div class="section-title">Plano de Ação</div>
+    <div class="field-group">
+      <div class="value-box" contenteditable="true">• Checklist ao assumir a reta (3-5 pacientes críticos)
+• Priorizar documentação antes do horário de troca
+• Revisar imediatamente pacientes vindos da porta</div>
+    </div>
+
+    <div class="field-group">
+      <label>Nota (opcional)</label>
+      <div class="value-box" contenteditable="true">⚠️ Não inferida</div>
+    </div>
+
+    <div class="field-group">
+      <label>Observações do Avaliador</label>
+      <div class="value-box" contenteditable="true" style="min-height:60px;"></div>
+    </div>
+
+    <button class="btn btn-outline" style="margin-bottom:8px;">Salvar Rascunho</button>
+    <button class="btn btn-success" onclick="liberarFeedback()">✅ Salvar e Liberar ao Residente</button>
+  </div>
+
+  <!-- ========== TELA 3: AVALIADOR – PERFIL DO RESIDENTE ========== -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-header">
+      <div class="avatar">AC</div>
+      <h2>Ana Carolina Domingues</h2>
+      <div class="role-tag">Atualmente: R2 / L2</div>
+    </div>
+
+    <!-- RESUMO DE PROGRESSO -->
+    <div class="fb-card" style="border-left: 4px solid var(--primary);">
+      <div class="fb-card-body">
+        <h4 style="color:var(--primary); font-size:0.75rem; text-transform:uppercase; margin-bottom:8px;">★ Resumo de Progresso</h4>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+            <div style="font-size:1.1rem; font-weight:700; color:var(--success);">85%</div>
+            <div style="font-size:0.65rem; color:var(--subtle);">Procedimentos OK</div>
+          </div>
+          <div style="background:#f8f9fa; padding:10px; border-radius:8px;">
+            <div style="font-size:1.1rem; font-weight:700; color:var(--primary);">L3</div>
+            <div style="font-size:0.65rem; color:var(--subtle);">Autonomia esperada</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Linha do Tempo (10 anos)</div>
+
+    <div class="timeline-item">
+      <div class="timeline-left">
+        <div class="timeline-dot"></div>
+        <div class="timeline-line" style="height:70px"></div>
+      </div>
+      <div class="card" style="flex:1;margin-bottom:0">
+        <div class="meta">09/03/2026 · R2 / L2 · 1ª Passagem</div>
+        <h3>Feedback – Retaguarda</h3>
+        <div class="chips">
+          <span class="chip chip-green">✓ Organização de altas</span>
+          <span class="chip chip-red">✗ Integração da porta</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-left">
+        <div class="timeline-dot" style="background:#34C759"></div>
+        <div class="timeline-line" style="height:70px"></div>
+      </div>
+      <div class="card" style="flex:1;margin-bottom:0">
+        <div class="meta">10/10/2025 · R1 / L1 · 2ª Passagem</div>
+        <h3>Feedback – Sala de Emergência</h3>
+        <div class="chips">
+          <span class="chip chip-green">✓ Raciocínio clínico</span>
+          <span class="chip chip-red">✗ Comunicação familiar</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-left">
+        <div class="timeline-dot" style="background:#8e8e93"></div>
+      </div>
+      <div class="card" style="flex:1;margin-bottom:0">
+        <div class="meta">04/10/2025 · R1 / L1 · 1ª Passagem</div>
+        <h3>Feedback – Triagem</h3>
+        <div class="chips">
+          <span class="chip chip-green">✓ Priorização de risco</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TELA 4: VISÃO DO RESIDENTE ========== -->
+  <div class="screen" id="screen-resident">
+    <div class="profile-header">
+      <div class="avatar" style="background:linear-gradient(135deg,#34C759,#1fa84c)">AC</div>
+      <h2>Meus Feedbacks</h2>
+      <div class="role-tag" style="background:#E8F8EE;color:var(--success)">Residente · R2 / L2</div>
+    </div>
+    <p style="text-align:center;color:var(--subtle);font-size:0.85rem;margin-bottom:16px;">Apenas feedbacks liberados pelo avaliador</p>
+
+    <div id="resident-list">
+      <div class="fb-card">
+        <div class="fb-card-header">
+          <h3>Feedback · 09/03/2026</h3>
+          <small>Retaguarda · 1ª Passagem · Avaliador: Dra. Picci</small>
+        </div>
+        <div class="fb-card-body">
+          <div class="fb-section">
+            <h4>✅ Pontos Fortes</h4>
+            <p>Boa capacidade de identificar prioridades, atuação colaborativa na definição de altas e reavaliação clínica ativa.</p>
+          </div>
+          <div class="fb-section">
+            <h4>⚠️ Pontos a Desenvolver</h4>
+            <p>Integração mais rápida dos pacientes vindos da porta. Documentação finalizada antes do horário de troca.</p>
+          </div>
+          <div class="fb-section">
+            <h4>📋 Plano de Ação</h4>
+            <p>Checklist ao assumir a reta. Revisar imediatamente casos sinalizados pela porta.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TELA 5: LISTA DE RESIDENTES ========== -->
+  <div class="screen" id="screen-list">
+    <div class="search-bar">
+      <span>🔍</span>
+      <input type="text" id="search-input" placeholder="Buscar residente por nome…" oninput="filterResidents()">
+    </div>
+    <div class="filters">
+      <span class="filter-chip on" onclick="toggleFilter(this,'todos')">Todos</span>
+      <span class="filter-chip" onclick="toggleFilter(this,'r1')">R1 / L1</span>
+      <span class="filter-chip" onclick="toggleFilter(this,'r2')">R2 / L2</span>
+      <span class="filter-chip" onclick="toggleFilter(this,'r3')">R3 / L3</span>
+      <span class="filter-chip" onclick="toggleFilter(this,'revisao')">Pendentes revisão</span>
+      <span class="filter-chip" onclick="toggleFilter(this,'retaguarda')">Retaguarda</span>
+      <span class="filter-chip" onclick="toggleFilter(this,'emergencia')">Emergência</span>
+    </div>
+    <div id="resident-list-items"></div>
+  </div>
+
+  <!-- ========== TELA 6: ACERVO REDESENHADO ========== -->
+  <div class="screen" id="screen-acervo">
+    <div class="acervo-header">
+      <h2>Acervo de feedbacks</h2>
+      <p>Busque por pessoa, período ou tipo de feedback</p>
+    </div>
+
+    <div class="acervo-search-bar">
+      <span style="color:var(--subtle)">🔍</span>
+      <input type="text" id="acervo-search" placeholder="Nome, tema, local, avaliador…" oninput="renderAcervo()">
+    </div>
+
+    <!-- 3 modos de navegação -->
+    <div class="mode-switch">
+      <button class="mode-btn on" id="mode-pessoa" onclick="setMode('pessoa')">Por pessoa</button>
+      <button class="mode-btn" id="mode-periodo" onclick="setMode('periodo')">Por período</button>
+      <button class="mode-btn" id="mode-contexto" onclick="setMode('contexto')">Por contexto</button>
+    </div>
+
+    <!-- Filtros principais -->
+    <div class="filter-row">
+      <div class="filter-pill" id="pill-ano" onclick="openSheet('ano')">
+        <span class="label">Ano</span>
+        <span id="val-ano">Todos</span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="filter-pill" id="pill-perfil" onclick="openSheet('perfil')">
+        <span class="label">Perfil avaliado</span>
+        <span id="val-perfil">Todos</span>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-pill" id="pill-tipo" onclick="openSheet('tipo')" style="flex:1">
+        <span class="label">Tipo de feedback</span>
+        <span id="val-tipo">Todos</span>
+        <span class="arrow">›</span>
+      </div>
+      <div class="filter-pill" id="pill-situacao" onclick="openSheet('situacao')">
+        <span class="label">Situação</span>
+        <span id="val-situacao">Todas</span>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
+    <button class="refine-btn" onclick="openSheet('refinar')">
+      ⊕ Refinar filtros (local, tema específico, passagem…)
+    </button>
+
+    <p class="acervo-count" id="acervo-count"></p>
+    <div id="acervo-results"></div>
+  </div>
+
+  <!-- BOTTOM SHEET -->
+  <div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet">
+    <h3 id="sheet-title">Filtrar</h3>
+    <div id="sheet-body"></div>
+    <button class="sheet-apply" onclick="closeSheet()">Aplicar</button>
+  </div>
+
+  <!-- BOTTOM NAV 5 abas -->
+  <div class="nav">
+    <button class="active" onclick="goTo('home', this)" id="nav-home">
+      <span class="icon">🎙️</span>Gravar
+    </button>
+    <button onclick="goTo('acervo', this)" id="nav-acervo">
+      <span class="icon">📁</span>Acervo
+    </button>
+    <button onclick="goTo('list', this)" id="nav-list">
+      <span class="icon">👥</span>Pessoas
+    </button>
+    <button onclick="goTo('review', this)" id="nav-review">
+      <span class="icon">📋</span>Revisões
+    </button>
+    <button onclick="goTo('resident', this)" id="nav-resident">
+      <span class="icon">🩺</span>Meus
+    </button>
+  </div>
+
+</div>
+
+<script>
+  let isRecording = false;
+  let mediaRecorder;
+  let audioChunks = [];
+  let timerInterval;
+  let startTs;
+
+  const RESIDENTS = [
+    { init:'AC', name:'Ana Carolina Domingues', role:'R2 / L2', total:3, pending:1, color:'#667eea', cenario:'retaguarda' },
+    { init:'FM', name:'Fernanda Machado',       role:'R2 / L2', total:2, pending:0, color:'#f093fb', cenario:'emergencia' },
+    { init:'JS', name:'Joana Spabla',           role:'R1 / L1', total:5, pending:2, color:'#4facfe', cenario:'retaguarda' },
+    { init:'JA', name:'Júlia Alves',            role:'R1 / L1', total:1, pending:0, color:'#43e97b', cenario:'emergencia' },
+    { init:'JP', name:'Júlia Português',        role:'R1 / L1', total:2, pending:1, color:'#fa709a', cenario:'retaguarda' },
+    { init:'SG', name:'Suzana Gifoni',          role:'R3 / L3', total:8, pending:0, color:'#30cfd0', cenario:'retaguarda' },
+    { init:'LL', name:'Letícia Leite',          role:'R2 / L2', total:4, pending:1, color:'#a18cd1', cenario:'emergencia' },
+    { init:'CA', name:'Carla Albuquerque',      role:'R1 / L1', total:1, pending:0, color:'#fda085', cenario:'retaguarda' },
+  ];
+
+  let activeFilter = 'todos';
+
+  // Acervo filter state
+  const acervoFilters = { ano:'todos', perfil:'todos', cenario:'todos', atividade:'todos', status:'todos' };
+
+  const ACERVO_FEEDBACKS = [
+    { pessoa:'Ana Carolina Domingues', perfil:'R2', cenario:'Retaguarda', atividade:'Evolução', status:'pronto_revisao', ano:'2026', passagem:'1ª', data:'09/03/2026' },
+    { pessoa:'Ana Carolina Domingues', perfil:'R1', cenario:'Sala de Emergência', atividade:'Comunicação', status:'liberado', ano:'2025', passagem:'2ª', data:'10/10/2025' },
+    { pessoa:'Joana Spabla',           perfil:'R1', cenario:'Retaguarda',          atividade:'Atendimento Inicial', status:'pronto_revisao', ano:'2026', passagem:'1ª', data:'12/03/2026' },
+    { pessoa:'Joana Spabla',           perfil:'R1', cenario:'Porta',               atividade:'Intubação', status:'revisado', ano:'2026', passagem:'1ª', data:'20/02/2026' },
+    { pessoa:'Fernanda Machado',       perfil:'R2', cenario:'Triagem',             atividade:'Comunicação', status:'liberado', ano:'2025', passagem:'2ª', data:'05/11/2025' },
+    { pessoa:'Letícia Leite',          perfil:'R2', cenario:'Retaguarda',          atividade:'Evolução', status:'pronto_revisao', ano:'2026', passagem:'1ª', data:'15/03/2026' },
+    { pessoa:'Suzana Gifoni',          perfil:'R3', cenario:'Passagem de Plantão', atividade:'Comunicação', status:'revisado', ano:'2025', passagem: null, data:'08/08/2025' },
+    { pessoa:'Júlia Português',        perfil:'R1', cenario:'Porta',               atividade:'Intraóssea', status:'pronto_revisao', ano:'2026', passagem:'1ª', data:'01/03/2026' },
+  ];
+
+  const statusLabel = { pronto_revisao:'Pendente de revis\u00e3o', revisado:'Revisado', liberado:'Liberado ao residente' };
+  const statusClass = { pronto_revisao:'pendente', revisado:'revisado', liberado:'liberado' };
+  let acervoMode = 'pessoa';
+
+  // --- ACERVO DATA with new taxonomy ---
+  const ACERVO_FEEDBACKS2 = [
+    { pessoa:'Ana Carolina Domingues', perfil:'R2', local:'Retaguarda', tipo:'Evolu\u00e7\u00e3o / condu\u00e7\u00e3o cl\u00ednica', tema:'Evolu\u00e7\u00e3o da retaguarda', status:'pronto_revisao', ano:'2026', passagem:'1\u00aa', data:'09/03/2026' },
+    { pessoa:'Ana Carolina Domingues', perfil:'R1', local:'Sala de Emerg\u00eancia', tipo:'Comportamento / postura', tema:'Comunica\u00e7\u00e3o com fam\u00edlia', status:'liberado', ano:'2025', passagem:'2\u00aa', data:'10/10/2025' },
+    { pessoa:'Joana Spabla',           perfil:'R1', local:'Retaguarda', tipo:'Evolu\u00e7\u00e3o / condu\u00e7\u00e3o cl\u00ednica', tema:'Atendimento inicial', status:'pronto_revisao', ano:'2026', passagem:'1\u00aa', data:'12/03/2026' },
+    { pessoa:'Joana Spabla',           perfil:'R1', local:'Porta', tipo:'Procedimento', tema:'Intuba\u00e7\u00e3o', status:'revisado', ano:'2026', passagem:'1\u00aa', data:'20/02/2026' },
+    { pessoa:'Fernanda Machado',       perfil:'R2', local:'Triagem', tipo:'Comportamento / postura', tema:'Comunica\u00e7\u00e3o com paciente', status:'liberado', ano:'2025', passagem:'2\u00aa', data:'05/11/2025' },
+    { pessoa:'Let\u00edcia Leite',          perfil:'R2', local:'Retaguarda', tipo:'Evolu\u00e7\u00e3o / condu\u00e7\u00e3o cl\u00ednica', tema:'Evolu\u00e7\u00e3o da retaguarda', status:'pronto_revisao', ano:'2026', passagem:'1\u00aa', data:'15/03/2026' },
+    { pessoa:'Suzana Gifoni',          perfil:'R3', local:'Sala de Emerg\u00eancia', tipo:'Passagem de plant\u00e3o', tema:'Passagem de caso grave', status:'revisado', ano:'2025', passagem:null, data:'08/08/2025' },
+    { pessoa:'J\u00falia Portugu\u00eas',        perfil:'R1', local:'Porta', tipo:'Procedimento', tema:'Intra\u00f3ssea', status:'pronto_revisao', ano:'2026', passagem:'1\u00aa', data:'01/03/2026' },
+  ];
+
+  const sheetDefs = {
+    ano:      { title:'Ano', field:'ano',    opts:['Todos','2026','2025','2024'] },
+    perfil:   { title:'Perfil avaliado', field:'perfil', opts:['Todos','R1','R2','R3','Res. Emerg. Ped.','Res. Externo','Assistente','Preceptor'] },
+    tipo:     { title:'Tipo de feedback', field:'tipo', opts:['Todos','Procedimento','Comportamento / postura','Evolu\u00e7\u00e3o / condu\u00e7\u00e3o cl\u00ednica','Discuss\u00e3o de caso','Passagem de plant\u00e3o','Telemedicina','Transporte','Atendimento','Outro'] },
+    situacao: { title:'Situa\u00e7\u00e3o do feedback', field:'status', opts:['Todos','pronto_revisao','revisado','liberado'], labels:{ pronto_revisao:'Pendente de revis\u00e3o', revisado:'Revisado', liberado:'Liberado ao residente' } },
+    refinar:  { title:'Refinar filtros', multi: true }
+  };
+
+  const acervoSel = { ano:'Todos', perfil:'Todos', tipo:'Todos', status:'Todos', local:'Todos', tema:'Todos' };
+
+  function openSheet(key) {
+    const def = sheetDefs[key];
+    document.getElementById('sheet-title').textContent = def.title;
+    const body = document.getElementById('sheet-body');
+    if (key === 'refinar') {
+      body.innerHTML = `
+        <div class="sheet-field">
+          <label>Local assistencial</label>
+          <div class="sheet-options">
+            ${['Todos','Porta','Retaguarda','Sala de Emerg\u00eancia','Triagem'].map(o =>
+              `<span class="sheet-opt ${acervoSel.local===o?'on':''}" onclick="selSheet('local','${o}',this)">${o}</span>`).join('')}
+          </div>
+        </div>
+        <div class="sheet-field">
+          <label>Tema espec\u00edfico</label>
+          <div class="sheet-options">
+            ${['Todos','Intuba\u00e7\u00e3o','Intra\u00f3ssea','Comunica\u00e7\u00e3o com paciente','Comunica\u00e7\u00e3o com fam\u00edlia','Evolu\u00e7\u00e3o da retaguarda','Passagem de caso grave','Atendimento inicial','Outro'].map(o =>
+              `<span class="sheet-opt ${acervoSel.tema===o?'on':''}" onclick="selSheet('tema','${o}',this)">${o}</span>`).join('')}
+          </div>
+        </div>`;
+    } else {
+      const opts = def.opts;
+      const labels = def.labels || {};
+      const selKey = def.field;
+      body.innerHTML = `<div class="sheet-options">${opts.map(o =>
+        `<span class="sheet-opt ${acervoSel[selKey]===(o==='Todos'?'Todos':o)?'on':''}" onclick="selSheet('${selKey}','${o}',this)">${labels[o]||o}</span>`
+      ).join('')}</div>`;
+    }
+    document.getElementById('sheet-overlay').classList.add('visible');
+    document.getElementById('sheet').classList.add('visible');
+    document.getElementById('sheet').style.display = 'block';
+  }
+
+  function selSheet(field, val, el) {
+    el.closest('.sheet-options').querySelectorAll('.sheet-opt').forEach(o => o.classList.remove('on'));
+    el.classList.add('on');
+    acervoSel[field] = val;
+    // Update pill label
+    const map = { ano:'val-ano', perfil:'val-perfil', tipo:'val-tipo', status:'val-situacao', local:null, tema:null };
+    const pillId = map[field];
+    if (pillId) {
+      const labels = { pronto_revisao:'Pendente', revisado:'Revisado', liberado:'Liberado' };
+      document.getElementById(pillId).textContent = labels[val] || val;
+      const pillEl = document.getElementById(pillId)?.closest('.filter-pill');
+      if (pillEl) pillEl.classList.toggle('active', val !== 'Todos');
+    }
+    renderAcervo();
+  }
+
+  function closeSheet() {
+    document.getElementById('sheet-overlay').classList.remove('visible');
+    document.getElementById('sheet').classList.remove('visible');
+    setTimeout(() => {
+        if (!document.getElementById('sheet').classList.contains('visible')) {
+            document.getElementById('sheet').style.display = 'none';
+        }
+    }, 300);
+  }
+
+  function setMode(m) {
+    acervoMode = m;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('on'));
+    document.getElementById('mode-' + m).classList.add('on');
+    renderAcervo();
+  }
+
+  function renderAcervo() {
+    const q = (document.getElementById('acervo-search')?.value || '').toLowerCase();
+    let list = ACERVO_FEEDBACKS2.filter(f => {
+      const matchQ = !q || f.pessoa.toLowerCase().includes(q) || f.local.toLowerCase().includes(q) || f.tipo.toLowerCase().includes(q) || f.tema.toLowerCase().includes(q);
+      const matchAno    = acervoSel.ano === 'Todos'     || f.ano    === acervoSel.ano;
+      const matchPerfil = acervoSel.perfil === 'Todos'  || f.perfil === acervoSel.perfil;
+      const matchTipo   = acervoSel.tipo === 'Todos'    || f.tipo   === acervoSel.tipo;
+      const matchStatus = acervoSel.status === 'Todos'  || f.status === acervoSel.status;
+      const matchLocal  = acervoSel.local === 'Todos'   || f.local  === acervoSel.local;
+      const matchTema   = acervoSel.tema === 'Todos'    || f.tema   === acervoSel.tema;
+      return matchQ && matchAno && matchPerfil && matchTipo && matchStatus && matchLocal && matchTema;
+    });
+
+    // Sort by mode
+    if (acervoMode === 'pessoa') list.sort((a,b) => a.pessoa.localeCompare(b.pessoa));
+    else if (acervoMode === 'periodo') list.sort((a,b) => b.ano.localeCompare(a.ano) || b.data.localeCompare(a.data));
+    else if (acervoMode === 'contexto') list.sort((a,b) => a.tipo.localeCompare(b.tipo) || a.local.localeCompare(b.local));
+
+    const countEl = document.getElementById('acervo-count');
+    const resultsEl = document.getElementById('acervo-results');
+    if (!list.length) {
+      countEl.textContent = '';
+      resultsEl.innerHTML = '<p style="color:var(--subtle);text-align:center;padding:40px 0;">Nenhum feedback com esses filtros.</p>';
+      return;
+    }
+    countEl.textContent = `${list.length} feedback${list.length>1?'s':''} encontrado${list.length>1?'s':''}`;
+    resultsEl.innerHTML = list.map(f => `
+      <div class="ac-card">
+        <div class="ac-name">${f.pessoa}</div>
+        <div class="ac-line1">${f.perfil}${f.passagem ? ' \u00b7 ' + f.passagem + ' passagem' : ''} \u00b7 ${f.local}</div>
+        <div class="ac-line2">${f.tipo} \u00b7 ${f.tema} \u00b7 ${f.data}</div>
+        <span class="ac-badge ${statusClass[f.status]}">${statusLabel[f.status]}</span>
+      </div>
+    `).join('');
+  }
+
+
+  function renderResidents(list) {
+    const el = document.getElementById('resident-list-items');
+    if (!list.length) { el.innerHTML = '<p style="color:var(--subtle);text-align:center;padding:30px 0;">Nenhum residente encontrado.</p>'; return; }
+    el.innerHTML = list.map(r => `
+      <div class="resident-row" onclick="goToProfile('${r.name}','${r.init}','${r.role}','${r.color}')">
+        <div class="res-avatar" style="background:${r.color}">${r.init}</div>
+        <div class="res-info">
+          <h3>${r.name}</h3>
+          <div class="res-meta">${r.role} · ${r.total} feedbacks${r.pending > 0 ? ` · <span style="color:var(--warning)">⚠️ ${r.pending} pendente${r.pending>1?'s':''}</span>` : ''}</div>
+        </div>
+        <span style="color:#ccc;font-size:1.2rem;">›</span>
+      </div>
+    `).join('');
+  }
+
+  function filterResidents() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    let list = RESIDENTS.filter(r => r.name.toLowerCase().includes(q));
+    if (activeFilter === 'r1') list = list.filter(r => r.role.includes('R1'));
+    else if (activeFilter === 'r2') list = list.filter(r => r.role.includes('R2'));
+    else if (activeFilter === 'r3') list = list.filter(r => r.role.includes('R3'));
+    else if (activeFilter === 'revisao') list = list.filter(r => r.pending > 0);
+    else if (activeFilter === 'retaguarda') list = list.filter(r => r.cenario === 'retaguarda');
+    else if (activeFilter === 'emergencia') list = list.filter(r => r.cenario === 'emergencia');
+    renderResidents(list);
+  }
+
+  function toggleFilter(el, key) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
+    el.classList.add('on');
+    activeFilter = key;
+    filterResidents();
+  }
+
+  function goToProfile(name, init, role, color) {
+    document.getElementById('screen-profile').querySelector('.avatar').textContent = init;
+    document.getElementById('screen-profile').querySelector('.avatar').style.background = `linear-gradient(135deg, ${color}, #333)`;
+    document.getElementById('screen-profile').querySelector('h2').textContent = name;
+    document.getElementById('screen-profile').querySelector('.role-tag').textContent = 'Atualmente: ' + role;
+    goTo('profile');
+  }
+
+  function goTo(id, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    if (id === 'list') renderResidents(RESIDENTS);
+    if (id === 'acervo') renderAcervo();
+
+    const titles = { home:'🎙️ Feedback App', review:'📝 Revisão da IA', profile:'📊 Perfil Longitudinal', resident:'🩺 Meus Feedbacks', list:'👥 Pessoas', acervo:'📁 Acervo' };
+    const badges = { resident:'Residente' };
+    document.getElementById('topbar-title').textContent = titles[id] || '🎙️ Feedback App';
+    const b = document.getElementById('topbar-badge');
+    b.textContent = badges[id] || 'Avaliador';
+    b.className = 'badge' + (id === 'resident' ? ' resident' : '');
+  }
+
+  function goToReview() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-review').classList.add('active');
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('topbar-title').textContent = '📝 Revisão da IA';
+    document.getElementById('topbar-badge').textContent = 'Avaliador';
+    document.getElementById('topbar-badge').className = 'badge';
+  }
+
+  function liberarFeedback() {
+    alert('✅ Feedback validado e liberado!\nO residente agora pode visualizá-lo na aba "Residente".');
+    goTo('home');
+    document.getElementById('nav-home').classList.add('active');
+  }
+
+  async function toggleRecording() {
+    const btn = document.getElementById('record-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnIcon = document.getElementById('btn-icon');
+    const timer = document.getElementById('timer');
+    const hint = document.getElementById('hint-text');
+
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = finalizeRecording;
+        mediaRecorder.start();
+        isRecording = true;
+        btn.classList.add('recording');
+        btnText.textContent = 'PARAR';
+        btnIcon.textContent = '⏹️';
+        timer.style.display = 'block';
+        hint.textContent = 'Gravando… fale livremente sem pressa';
+        startTs = Date.now();
+        timerInterval = setInterval(() => {
+          const d = new Date(Date.now() - startTs);
+          const m = d.getMinutes().toString().padStart(2,'0');
+          const s = d.getSeconds().toString().padStart(2,'0');
+          timer.textContent = m + ':' + s;
+        }, 1000);
+      } catch(e) {
+        alert('Permissão de microfone necessária.');
+      }
+    } else {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      isRecording = false;
+      clearInterval(timerInterval);
+      btn.classList.remove('recording');
+      btnText.textContent = 'GRAVAR NOVO';
+      btnIcon.textContent = '🎙️';
+      timer.style.display = 'none';
+      timer.textContent = '00:00';
+      hint.textContent = 'Zero preenchimento • Apenas grave e pare';
+    }
+  }
+
+  function finalizeRecording() {
+    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+    const url = URL.createObjectURL(blob);
+    const dur = Math.floor((Date.now() - startTs) / 1000);
+    const m = Math.floor(dur/60).toString().padStart(2,'0');
+    const s = (dur%60).toString().padStart(2,'0');
+
+    const container = document.getElementById('recorded-feedbacks');
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="meta">Agora · ${m}:${s}</div>
+      <h3>Novo Feedback</h3>
+      <span class="badge-status s-salvo">Salvo localmente</span>
+      <audio controls src="${url}" style="margin-top:10px;width:100%;height:32px;"></audio>
+      <p style="margin-top:8px;font-size:0.82rem;color:var(--subtle)">⏳ Aguardando internet para sincronizar e processar IA…</p>
+    `;
+    container.prepend(card);
+
+    // Simula sincronização e processamento IA
+    setTimeout(() => {
+      card.querySelector('.badge-status').textContent = 'Processando IA…';
+      card.querySelector('.badge-status').className = 'badge-status s-ia';
+      card.querySelector('p').textContent = '🤖 IA transcrevendo e inferindo contexto do áudio…';
+    }, 2500);
+
+    setTimeout(() => {
+      card.querySelector('.badge-status').textContent = 'Pronto para revisão';
+      card.querySelector('.badge-status').className = 'badge-status s-revisao';
+      card.querySelector('p').textContent = '';
+      const revBtn = document.createElement('button');
+      revBtn.className = 'btn btn-primary';
+      revBtn.style.marginTop = '10px';
+      revBtn.textContent = 'Revisar Feedback da IA →';
+      revBtn.onclick = goToReview;
+      card.appendChild(revBtn);
+    }, 6000);
+  }
+</script>
+</body>
+</html>
