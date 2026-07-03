@@ -31,17 +31,22 @@ export default function Meus() {
       ? (typeof fb.campos_revisados === 'string' ? JSON.parse(fb.campos_revisados) : fb.campos_revisados)
       : (fb.campos_ia ? (typeof fb.campos_ia === 'string' ? JSON.parse(fb.campos_ia) : fb.campos_ia) : {});
 
-    const fortes = Array.isArray(dados.pontos_fortes) ? dados.pontos_fortes : (dados.pontos_fortes ? [dados.pontos_fortes] : []);
-    const diffs = Array.isArray(dados.dificuldades) ? dados.dificuldades : (dados.dificuldades ? [dados.dificuldades] : []);
-    const plano = Array.isArray(dados.plano_de_acao) ? dados.plano_de_acao : (dados.plano_de_acao ? [dados.plano_de_acao] : []);
+    // v2 estruturado: arrays vêm de auto_analise e plano_acao
+    const fortes = dados.auto_analise?.maior_qualidade
+      || (Array.isArray(dados.pontos_fortes) ? dados.pontos_fortes : (dados.pontos_fortes ? [dados.pontos_fortes] : []));
+    const diffs = dados.auto_analise?.maior_dificuldade
+      || (Array.isArray(dados.dificuldades) ? dados.dificuldades : (dados.dificuldades ? [dados.dificuldades] : []));
+    const plano = dados.plano_acao?.acoes
+      || (Array.isArray(dados.plano_de_acao) ? dados.plano_de_acao : (dados.plano_de_acao ? [dados.plano_de_acao] : []));
+    const cl = dados.classificacoes || {};
 
     return {
       fortes,
       diffs,
       plano,
-      autonomia: dados.autonomia || dados.autonomia_sugerida || '',
-      nota: dados.nota || dados.nota_sugerida || '',
-      observacoes: dados.observacoes || '',
+      autonomia: dados.autonomia || dados.autonomia_sugerida || cl.autonomia || '',
+      nota: dados.nota || dados.nota_sugerida || cl.nota || '',
+      observacoes: dados.observacao_final || dados.observacoes || '',
     };
   }
 

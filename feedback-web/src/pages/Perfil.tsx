@@ -59,8 +59,10 @@ export default function Perfil() {
       ? (typeof fb.campos_revisados === 'string' ? JSON.parse(fb.campos_revisados) : fb.campos_revisados)
       : (fb.campos_ia ? (typeof fb.campos_ia === 'string' ? JSON.parse(fb.campos_ia) : fb.campos_ia) : {});
 
-    const fortes = Array.isArray(dados.pontos_fortes) ? dados.pontos_fortes : (dados.pontos_fortes ? [dados.pontos_fortes] : []);
-    const diffs = Array.isArray(dados.dificuldades) ? dados.dificuldades : (dados.dificuldades ? [dados.dificuldades] : []);
+    const fortes = dados.auto_analise?.maior_qualidade
+      || (Array.isArray(dados.pontos_fortes) ? dados.pontos_fortes : (dados.pontos_fortes ? [dados.pontos_fortes] : []));
+    const diffs = dados.auto_analise?.maior_dificuldade
+      || (Array.isArray(dados.dificuldades) ? dados.dificuldades : (dados.dificuldades ? [dados.dificuldades] : []));
     fortes.forEach((f: string) => todasFortes.push(f.replace(/^[•\-]\s*/, '')));
     diffs.forEach((d: string) => todasDiffs.push(d.replace(/^[•\-]\s*/, '')));
   });

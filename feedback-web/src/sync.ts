@@ -70,7 +70,7 @@ export async function syncAllPending() {
 export async function checkRemoteStatus(feedbackId: string): Promise<string | null> {
   const { data, error } = await supabase
     .from('feedbacks')
-    .select('status, campos_ia, ia_pessoa_sugerida, ia_pessoa_confianca, perfil_no_momento, passagem, local_inferido, tipo_feedback_inferido, tema_especifico_inferido, relatorio, transcricao, ia_confianca_contexto')
+    .select('status, campos_ia, ia_pessoa_sugerida, ia_pessoa_confianca, perfil_no_momento, passagem, local_inferido, tipo_feedback_inferido, tema_especifico_inferido, relatorio_estruturado, relatorio, transcricao, ia_confianca_contexto')
     .eq('id', feedbackId)
     .single();
 
@@ -140,7 +140,7 @@ export async function fetchDomainValues() {
 export async function fetchFeedbacksRemoto() {
   const { data, error } = await supabase
     .from('feedbacks')
-    .select('id, status, ia_pessoa_sugerida, perfil_no_momento, passagem, local_inferido, tipo_feedback_inferido, tema_especifico_inferido, campos_ia, campos_revisados, relatorio, transcricao, data_evento, duracao_segundos, liberado_ao_avaliado')
+    .select('id, status, ia_pessoa_sugerida, perfil_no_momento, passagem, local_inferido, tipo_feedback_inferido, tema_especifico_inferido, campos_ia, campos_revisados, relatorio_estruturado, relatorio, transcricao, data_evento, duracao_segundos, liberado_ao_avaliado')
     .order('data_evento', { ascending: false });
 
   if (error) return [];

@@ -97,20 +97,28 @@ export default function Revisar() {
     const ia = data.campos_ia ? (typeof data.campos_ia === 'string' ? JSON.parse(data.campos_ia) : data.campos_ia) : {};
     const revisados = data.campos_revisados ? (typeof data.campos_revisados === 'string' ? JSON.parse(data.campos_revisados) : data.campos_revisados) : null;
     const fonte = revisados || ia;
+    const cab = ia.cabecalho || {};
+    const cl = ia.classificacoes || {};
 
     setCampos({
-      nome_residente: data.ia_pessoa_sugerida || '',
-      perfil: data.perfil_no_momento || '',
-      passagem: data.passagem || '',
-      local: data.local_inferido || '',
-      tipo: data.tipo_feedback_inferido || '',
-      tema: data.tema_especifico_inferido || '',
-      autonomia: fonte.autonomia_sugerida || fonte.autonomia || data.autonomia_sugerida || '',
-      pontos_fortes: Array.isArray(fonte.pontos_fortes) ? fonte.pontos_fortes.join('\n• ') : (fonte.pontos_fortes || ''),
-      dificuldades: Array.isArray(fonte.dificuldades) ? fonte.dificuldades.join('\n• ') : (fonte.dificuldades || ''),
-      plano_de_acao: Array.isArray(fonte.plano_de_acao) ? fonte.plano_de_acao.join('\n• ') : (fonte.plano_de_acao || ''),
-      nota: fonte.nota_sugerida ?? fonte.nota ?? data.nota_sugerida ?? '',
-      observacoes: fonte.observacoes || fonte.observacoes_avaliador || ia.observacoes || ia.observacoes_avaliador || '',
+      nome_residente: data.ia_pessoa_sugerida || cab.nome_residente || '',
+      perfil: data.perfil_no_momento || cl.perfil_no_momento || ia.perfil_no_momento || '',
+      passagem: data.passagem || cab.passagem || ia.passagem || '',
+      local: data.local_inferido || cl.local_assistencial || ia.local_assistencial || '',
+      tipo: data.tipo_feedback_inferido || cl.tipo_feedback || ia.tipo_feedback || '',
+      tema: data.tema_especifico_inferido || cl.tema_especifico || ia.tema_especifico || '',
+      autonomia: fonte.autonomia_sugerida || fonte.autonomia || data.autonomia_sugerida || cl.autonomia || '',
+      pontos_fortes: Array.isArray(ia.auto_analise?.maior_qualidade)
+        ? ia.auto_analise.maior_qualidade.join('\n• ')
+        : (Array.isArray(fonte.pontos_fortes) ? fonte.pontos_fortes.join('\n• ') : (fonte.pontos_fortes || '')),
+      dificuldades: Array.isArray(ia.auto_analise?.maior_dificuldade)
+        ? ia.auto_analise.maior_dificuldade.join('\n• ')
+        : (Array.isArray(fonte.dificuldades) ? fonte.dificuldades.join('\n• ') : (fonte.dificuldades || '')),
+      plano_de_acao: Array.isArray(ia.plano_acao?.acoes)
+        ? ia.plano_acao.acoes.join('\n• ')
+        : (Array.isArray(fonte.plano_de_acao) ? fonte.plano_de_acao.join('\n• ') : (fonte.plano_de_acao || '')),
+      nota: fonte.nota_sugerida ?? fonte.nota ?? data.nota_sugerida ?? cl.nota ?? '',
+      observacoes: ia.observacao_final || fonte.observacoes || ia.observacoes || '',
       relatorio: fonte.relatorio || '',
     });
     setIncertos(data.campos_incertos || ia.campos_incertos || []);
@@ -125,19 +133,30 @@ export default function Revisar() {
     const revisados = remote.campos_revisados ? (typeof remote.campos_revisados === 'string' ? JSON.parse(remote.campos_revisados) : remote.campos_revisados) : null;
     const fonte = revisados || ia;
 
+    // No novo formato (v2 estruturado), os campos vêm aninhados
+    const cab = ia.cabecalho || {};
+    const cl = ia.classificacoes || {};
+
     setCampos({
-      nome_residente: remote.ia_pessoa_sugerida || '',
-      perfil: remote.perfil_no_momento || '',
-      passagem: remote.passagem || '',
-      local: remote.local_inferido || '',
-      tipo: remote.tipo_feedback_inferido || '',
-      tema: remote.tema_especifico_inferido || '',
-      autonomia: fonte.autonomia_sugerida || fonte.autonomia || '',
-      pontos_fortes: Array.isArray(fonte.pontos_fortes) ? fonte.pontos_fortes.join('\n• ') : (fonte.pontos_fortes || ''),
-      dificuldades: Array.isArray(fonte.dificuldades) ? fonte.dificuldades.join('\n• ') : (fonte.dificuldades || ''),
-      plano_de_acao: Array.isArray(fonte.plano_de_acao) ? fonte.plano_de_acao.join('\n• ') : (fonte.plano_de_acao || ''),
-      nota: fonte.nota_sugerida ?? fonte.nota ?? '',
-      observacoes: fonte.observacoes || fonte.observacoes_avaliador || ia.observacoes || ia.observacoes_avaliador || '',
+      nome_residente: remote.ia_pessoa_sugerida || cab.nome_residente || '',
+      perfil: remote.perfil_no_momento || cl.perfil_no_momento || ia.perfil_no_momento || '',
+      passagem: remote.passagem || cab.passagem || ia.passagem || '',
+      local: remote.local_inferido || cl.local_assistencial || ia.local_assistencial || '',
+      tipo: remote.tipo_feedback_inferido || cl.tipo_feedback || ia.tipo_feedback || '',
+      tema: remote.tema_especifico_inferido || cl.tema_especifico || ia.tema_especifico || '',
+      autonomia: fonte.autonomia_sugerida || fonte.autonomia || cl.autonomia || '',
+      // Pontos fortes/dificuldades/plano: do estruturado ou fallback para campos planos
+      pontos_fortes: Array.isArray(ia.auto_analise?.maior_qualidade)
+        ? ia.auto_analise.maior_qualidade.join('\n• ')
+        : (Array.isArray(fonte.pontos_fortes) ? fonte.pontos_fortes.join('\n• ') : (fonte.pontos_fortes || '')),
+      dificuldades: Array.isArray(ia.auto_analise?.maior_dificuldade)
+        ? ia.auto_analise.maior_dificuldade.join('\n• ')
+        : (Array.isArray(fonte.dificuldades) ? fonte.dificuldades.join('\n• ') : (fonte.dificuldades || '')),
+      plano_de_acao: Array.isArray(ia.plano_acao?.acoes)
+        ? ia.plano_acao.acoes.join('\n• ')
+        : (Array.isArray(fonte.plano_de_acao) ? fonte.plano_de_acao.join('\n• ') : (fonte.plano_de_acao || '')),
+      nota: fonte.nota_sugerida ?? fonte.nota ?? cl.nota ?? '',
+      observacoes: ia.observacao_final || fonte.observacoes || ia.observacoes || cl.observacoes || '',
       relatorio: fonte.relatorio || '',
     });
     setIncertos(ia.campos_incertos || []);
