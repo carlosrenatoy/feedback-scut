@@ -35,6 +35,7 @@ type FbRemoto = {
   data_evento: string;
   campos_revisados: string | null;
   campos_ia: any;
+  relatorio: string | null;
 };
 
 type Mode = 'pessoa' | 'periodo' | 'tipo';
@@ -86,7 +87,8 @@ export default function Acervo() {
       (fb.ia_pessoa_sugerida || '').toLowerCase().includes(q) ||
       (fb.local_inferido || '').toLowerCase().includes(q) ||
       (fb.tipo_feedback_inferido || '').toLowerCase().includes(q) ||
-      (fb.tema_especifico_inferido || '').toLowerCase().includes(q)
+      (fb.tema_especifico_inferido || '').toLowerCase().includes(q) ||
+      (fb.relatorio || '').toLowerCase().includes(q)
     );
   });
 
